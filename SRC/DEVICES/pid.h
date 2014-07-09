@@ -26,7 +26,7 @@ typedef struct {
     float Kd;         // 微分常数
     float Un_1;       // 目标值
     float En_1;       // 上一次的误差
-    float En_2;       // 上上此的误差
+    float En_2;       // 
 } PIDx;
 
 /* APIs */

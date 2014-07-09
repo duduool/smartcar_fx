@@ -1,182 +1,202 @@
 #include "cntl.h"
+#include "led.h"
+#include "stdio.h"
+#include "uart.h"
 
 /* const value */
-const uint8_t CENTER =  64; // 小车中心
-const uint8_t OFFSET =  59; // 丢线后中线的偏移
-
+const uint8_t CENTER = 57;  // 小车中心
+const uint8_t THRESHOLD = 0xF5; 
+const uint8_t YUZI = 45;
+                            // 阈值
 /* global variable */
-extern 
-uint8_t IMAGE[COL];         // 二值化后的像素点
-uint8_t Mid[6];             // 最近六次中点
+uint8_t IMAGE[COL];         // 图像的一帧
+uint8_t MID;
+uint8_t OFFSET = 57;        // 偏移
 
 /* global status */
-uint8_t crosscnt;           // 双线丢失行数判定十字路    
-uint8_t findcross;          // 发现十字路
+int m[] = {CENTER, CENTER, CENTER, CENTER}; 
+                            // 依次存放当前中值，上次，上上次，上上上次中值
+int servo;
 
 /* pid variable */
-double Kp = 2.1;            // PID p控制
+double Kp = 1.5;            // PID p控制
 double Ki = 0;              // PID i控制
-double Kd = 0.5;            // PID d控制
-int m[] = {64, 64, 64, 64}; // 依次存放当前中值，上次，上上次，上上上次中值
-uint16_t duty[] = {         // 128点每个点对应的舵机值
-   1794, 1803, 1812, 1821, 1830, 1839, 1848, 1857, // 0   ~ 7
-   1866, 1875, 1884, 1893, 1902, 1911, 1920, 1929, // 8   ~ 15
-   1938, 1947, 1956, 1965, 1974, 1983, 1992, 2001, // 16  ~ 23
-   2010, 2019, 2028, 2037, 2046, 2055, 2064, 2073, // 24  ~ 31
-   2082, 2091, 2100, 2109, 2118, 2127, 2136, 2145, // 32  ~ 39
-   2154, 2163, 2172, 2181, 2190, 2199, 2208, 2217, // 40  ~ 47
-   2226, 2235, 2244, 2253, 2262, 2271, 2280, 2289, // 48  ~ 55
-   2298, 2307, 2316, 2325, 2334, 2343, 2344, 2344, // 56  ~ 63
-   2344, 2379, 2388, 2397, 2406, 2415, 2424, 2433, // 64  ~ 71
-   2442, 2451, 2460, 2469, 2478, 2487, 2496, 2505, // 72  ~ 79
-   2514, 2523, 2532, 2541, 2550, 2559, 2568, 2577, // 80  ~ 87
-   2586, 2595, 2604, 2613, 2622, 2631, 2640, 2649, // 88  ~ 95
-   2658, 2667, 2676, 2685, 2694, 2703, 2712, 2721, // 96  ~ 103
-   2730, 2739, 2748, 2757, 2766, 2775, 2784, 2793, // 104 ~ 111
-   2802, 2811, 2820, 2829, 2838, 2847, 2849, 2849, // 112 ~ 119
-   2849, 2849, 2849, 2849, 2849, 2849, 2849, 2849, // 120 ~ 127
-};
+double Kd = 0.2;            // PID d控制
 
-/* 找左黑线 */
-static uint8_t leftblackline() {
-    uint8_t i;
-    uint8_t left;
-    for (i = 64; i > 0; i--) {
-        if (i <= 1) {
-            left = 0;
-            break;
-        }
-        if (IMAGE[i] == 1 && IMAGE[i-1] == 1) {
-            left = i;
-            break;
+const uint16_t duty[] = {   // 舵机输出PWM
+   1794, 1803, 1812, 1821, 1830, 1839, 1848, 1857, // 0 
+   1866, 1875, 1884, 1893, 1902, 1911, 1920, 1929, // 8
+   1938, 1947, 1956, 1965, 1974, 1983, 1992, 2001, // 16
+   2010, 2019, 2028, 2037, 2046, 2055, 2064, 2073, // 24
+   2082, 2091, 2100, 2109, 2118, 2127, 2136, 2145, // 32
+   2154, 2163, 2172, 2181, 2190, 2199, 2208, 2217, // 40
+   2226, 2235, 2244, 2253, 2262, 2271, 2280, 2289, // 48
+   2298, 2307, 2316, 2325, 2334, 2343, 2344, 2344, // 56
+   2344, 2379, 2388, 2397, 2406, 2415, 2424, 2433, 
+   2442, 2451, 2460, 2469, 2478, 2487, 2496, 2505, 
+   2514, 2523, 2532, 2541, 2550, 2559, 2568, 2577, 
+   2586, 2595, 2604, 2613, 2622, 2631, 2640, 2649, 
+   2658, 2667, 2676, 2685, 2694, 2703, 2712, 2721, 
+   2730, 2739, 2748, 2757, 2766, 2775, 2784, 2793, 
+   2802, 2811, 2820, 2829, 2838, 2847, 2849, 2849, 
+   2849, 2849, 2849, 2849, 2849, 2849, 2849, 2849, 
+};      
+
+/* 中值滤波 */
+void Mid_Filter(void)
+{           
+  uint8_t a[5];
+  uint8_t i, j, k, temp;
+
+  for (k = 3; k < 125; k++) {
+    a[0] = IMAGE[k-2];
+    a[1] = IMAGE[k-1];
+    a[2] = IMAGE[k];
+    a[3] = IMAGE[k+1];
+    a[4] = IMAGE[k+2];
+       
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4-i; j++) {
+            if (a[j] > a[j+1]) {
+                temp = a[j];
+                a[j] = a[j+1];
+                a[j+1] = temp;
+            }
         }
     }
-    return left;
+    IMAGE[k] = a[2]; 
+  }  
 }
 
-/* 找右黑线 */
-static uint8_t rightblackline() {
-    uint8_t i;
-    uint8_t right;
-    for (i = 64; i < 127; i++) {
-        if (i >= 126) {
-            right = 127;
-            break;
-        }
-        if (IMAGE[i] == 1 && IMAGE[i+1] == 1) {
-            right = i;
-            break;
+/* 寻找左边线 */
+static uint8_t get_leftboder(int start)
+{
+    uint8_t i = 0, left = 0;
+    for (i = start; i > 7; i--) {
+        if (IMAGE[i] > (IMAGE[i-5]+YUZI) && IMAGE[i-1] > (IMAGE[i-6]+YUZI)) {
+               left = i - 5;
+               break;
         }
     }
+    
+    return left;
+} 
+
+/* 寻找右边线 */
+static uint8_t get_rightboder(int start) 
+{
+    uint8_t i = 0, right = 127;
+    for (i = start; i < 117; i++) {
+          if (IMAGE[i] > (IMAGE[i+5]+YUZI) && IMAGE[i+1] > (IMAGE[i+6]+YUZI)) {
+               right = i + 5;
+               break;
+          }
+    }
+    
     return right;
 }
 
-
-/* 拟合中心引导线 */
-uint8_t Get_MidLine(void)
+void Get_Midx(void) 
 {
-    //uint8_t left = leftblackline();
-    uint8_t right= rightblackline();
-    uint8_t left = right;
-    uint8_t mid = CENTER;
-    if (left > 2 && right < 125)
-        mid = (left + right) >> 2;
-    else if (left > 2 && right >= 125)
-        mid = left + OFFSET;
-    else if (left < 2 && right < 125)
-        mid = right - OFFSET;
-    else 
-        mid = mid;
+    uint8_t left = get_leftboder(30);
+    uint8_t right= get_rightboder(30);
     
-    return mid;
-}
-
-
-/* 在二值化之前滤波 */
-void Mid_Filter(void)
-{           
-    int i, old = 0, average, mid, temp = 0;
-    IMAGE[0] = IMAGE[2];             
-    IMAGE[1] = IMAGE[2];
-    for(i = 1; i < 127; i++){                     
-        if(old == IMAGE[i+1]){
-             IMAGE[i] = temp; 
-        }else{
-              if((IMAGE[i-1] > IMAGE[i] && IMAGE[i-1] < IMAGE[i+1]) || (IMAGE[i-1] > IMAGE[i+1] && IMAGE[i-1] < IMAGE[i])) {
-                   mid = IMAGE[i-1];
-              } else if (  (IMAGE[i] > IMAGE[i-1] && IMAGE[i] < IMAGE[i+1]) || (IMAGE[i]>IMAGE[i+1] && IMAGE[i] < IMAGE[i-1])) {
-                   mid = IMAGE[i];
-              } else if ((IMAGE[i+1] > IMAGE[i] && IMAGE[i+1] < IMAGE[i-1]) || (IMAGE[i+1]>IMAGE[i-1] && IMAGE[i+1] < IMAGE[i])) {
-                   mid = IMAGE[i+1];
-              } else {
-                   mid = IMAGE[i];
-              }
-              average = (IMAGE[i-1] + IMAGE[i] + IMAGE[i+1])/3;
-              temp = 0.3*mid + 0.7*average;
-              IMAGE[i] = temp;
+    if (left != 0 && right != 127) {
+        MID = (left + right) >> 1;
+        Steer_Out(DIR_MID);
+    } else if (left == 0 && right != 127) {
+        if (right < 95) {
+            Steer_Out(2000);
+            DelayMs(50);
+        } else if (right >= 95 && right < 105) {
+            Steer_Out(2201);
+            DelayMs(10);
+        }    
+    } else if (left != 0 && right == 127) {
+        if (left < 15) {
+            Steer_Out(2399);
+            DelayMs(10);
+        } else {
+            Steer_Out(2800);
+            DelayMs(50);
         }
-        old = IMAGE[i-1];
-    } 
-}
-
-/* 简单的固定阈值二值化函 */
-void Binarization(void)
-{
-	unsigned char i;
-	/* 固定阈值二值化(最好先滤波) */
-    for (i = 0; i < COL; i++) {
-        if(IMAGE[i] > 65) 
-            IMAGE[i] = 1;    // 白
-         else 
-            IMAGE[i] = 0;    // 黑
-     }
-}
-
-/* 求平均值 */
-uint8_t Average()
-{
-    uint8_t i;
-    uint8_t sum = 0;
-    for (i = 0; i < 6; i++) {
-        sum += Mid[i];
+    } else {
+        //Motor_Forward(0);
     }
-    sum /= 6;
-    
-    return sum;
+}  
+
+void Get_Mid(void)
+{
+    uint8_t left = get_leftboder(30);
+    uint8_t right= get_rightboder(30);
+
+    if (left != 0 && right != 127) {
+        MID = (left + right) >> 1;
+    } else if (left == 0 && right != 127) {
+        if (right < 70) {
+            OFFSET = 40;
+        } else if (right >= 70 && right < 95) {
+            OFFSET = 50;
+        }
+        MID = right - OFFSET;
+        TwinkleLed(PTA, 17);
+    } else if (left != 0 && right == 127) {
+        if (left < 12) {
+            OFFSET = 50;
+        } else if (left >= 12) {
+            OFFSET = 45;
+        }
+        MID = left + OFFSET;
+        TwinkleLed(PTA, 14);
+    } else {
+       Steer_Out(duty[64 + servo]);
+    }
 }
 
-/* PID算法控制舵机打角 */
-void Steer_PIDx(uint8_t mid) 
+void Simple(void)
 {
-    int temp;
+    if (MID < 30) {
+        Steer_Out(duty[20]);
+        DelayMs(100);
+    } else if (MID >= 30 && MID < 45) {
+        Steer_Out(duty[50]);
+        DelayMs(500);
+    } else if (MID >= 45 && MID < 56) {
+        Steer_Out(duty[MID]);
+        DelayMs(500);
+    } else if (MID >= 56 && MID < 64) {
+        Steer_Out(DIR_MID);
+        DelayMs(200);
+    } else {
+        Steer_Out(duty[80]);
+        DelayMs(200);
+    }
+}
+
+
+/* 控制舵机 */
+void Steer_PIDx(void) 
+{
     int e[4];
     int ed;
-      
-    m[3] = mid;
-      
-	e[3] = m[3] - CENTER;
+    
+    m[3] = MID;  // 存放当前中值
+	
+    e[3] = m[3] - CENTER;
     e[2] = m[2] - CENTER;
     e[1] = m[1] - CENTER;
     e[0] = m[0] - CENTER;
-    ed = e[3]-e[0];
+    ed = e[3] - e[0];
     
-    temp = (e[3])*Kp + (e[3]+e[2]+e[1]+e[0])*Ki + (ed)*Kd;
+    servo = (e[3])*Kp + (e[3]+e[2]+e[1]+e[0])*Ki + (ed)*Kd;
       
-    if(temp > 63){               
-        temp = 63;
-    }else if(temp < -64){
-        temp = -64;
+    if (servo > 63) {               
+        servo = 63;
+    } else if (servo < -64){
+        servo = -64;
     }
-      
-    Steer_Out(duty[CENTER + temp]);
-      
-    if(temp < 10 && temp > -10) {
-      //  Motor_Forward(DEF_SPEED+15);
-    }else if(temp < 25 && temp > -25) {
-      //  Motor_Forward(DEF_SPEED);
-    }else{
-      //  Motor_Forward(DEF_SPEED - 15);
-    }
+    
+    Steer_Out(duty[64 + servo]);
       
     m[0] = m[1];
     m[1] = m[2];

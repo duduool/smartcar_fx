@@ -11,14 +11,10 @@
 /* Core Clock = 100MHZ, Bus Clock = 100/3MHZ
    PWM = 100HZ, MOTOR = 20KHZ    
 */
-extern uint8_t IMAGE[COL];  
-extern uint8_t Mid[6];
-extern uint16_t duty[];
 
 int main(void)
 {
-    uint8_t i = 0, mid;
-    i = i;
+    uint8_t i = 0;
     DisableInterrupts();
         
     /* 选择外部50M晶振，并且内核可超频到100M */
@@ -33,6 +29,7 @@ int main(void)
     Motor_Init();
     /* LED PTA14初始化 */
     LEDInit(PTA, 14);
+    LEDInit(PTA, 17);
     /* 初始化CCD */
     CCDInit(&CCDParSet);
     /* 打印CPU时钟信息 */
@@ -46,26 +43,15 @@ int main(void)
     //Config_PIT(PIT0,80);
         
     while(1) {
-        #if 1
         /* Sampling CCD data */
-        //for (i = 0; i < 6; i++) {
+        for (i = 0; i < 2; i++) {
             CCD_GetImage((uint32_t)ADC0_SE8A_PB0);
-            Mid_Filter();
-         Binarization();
-            SendImage();
-            mid = Get_MidLine();
-        //    Mid[i] = Get_MidLine();
-        //}
-			  
-        /* 方向控制 */
-        //Steer_PIDx(Average());
-        Steer_Out(duty[ABS(mid - 64)]);
-        #else
-        /* Tesing steer */
-        for (i = 0; i < 128; i++) {
-            Steer_Out(duty[i]);
-            DelayMs(500);
         }
-        #endif
+        Mid_Filter();
+        Get_Mid();
+        Steer_PIDx();
+        DelayMs(500);
+        //Simple();
+        //SendImage();
     }
 }

@@ -69,7 +69,7 @@ uint32_t ADC_GetConversionValue(uint32_t ADCxMap)
 	ADCx->SC1[pADC_Map->m_SpecDefine1] |= pADC_Map->m_ChlIndex;
 
 	while((ADCx->SC1[pADC_Map->m_SpecDefine1] & ADC_SC1_COCO_MASK) == 0);  //等待转换完毕
-	//返回结果
+	//返回结果	
 	return ADCx->R[pADC_Map->m_SpecDefine1];
 }
 

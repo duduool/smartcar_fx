@@ -35,19 +35,14 @@
 
 #define MAX_SPEED           50
 #define MID_SPEED           40
-#define MIN_SPEED           30
-#define DEF_SPEED           20
+#define MIN_SPEED           20
+#define DEF_SPEED           12
 #define DED_SPEED           10
 
 /* ¶æ»ú×ª½Ç·¶Î§(-32, 32)¶È */
 #define DIR_MID		        2344            // 0
 #define DIR_LEFT	        (DIR_MID - 550) // -32 1794
 #define DIR_RIGHT	        (DIR_MID + 505) // 32  2849
-
-typedef struct {
-    uint8_t i;
-    uint8_t j;
-}POINT;
 
 
 /* APIs */

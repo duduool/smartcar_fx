@@ -1,0 +1,19 @@
+..\obj\main.o: ..\SRC\USER\main.c
+..\obj\main.o: ..\SRC\DRIVERS\adc.h
+..\obj\main.o: ..\SRC\DRIVERS\sys.h
+..\obj\main.o: ..\SRC\STARTUP\DeviceSupport\MKL25Z4.h
+..\obj\main.o: ..\SRC\STARTUP\CoreSupport\core_cm0plus.h
+..\obj\main.o: D:\Program Files\Keil_v5\ARM\ARMCC\bin\..\include\stdint.h
+..\obj\main.o: ..\SRC\STARTUP\CoreSupport\core_cmInstr.h
+..\obj\main.o: ..\SRC\STARTUP\CoreSupport\core_cmFunc.h
+..\obj\main.o: ..\SRC\STARTUP\DeviceSupport\system_MKL25Z4.h
+..\obj\main.o: ..\SRC\DEVICES\led.h
+..\obj\main.o: ..\SRC\DRIVERS\gpio.h
+..\obj\main.o: ..\SRC\DRIVERS\pit.h
+..\obj\main.o: ..\SRC\DEVICES\isr.h
+..\obj\main.o: ..\SRC\DEVICES\pwm.h
+..\obj\main.o: ..\SRC\DEVICES\pid.h
+..\obj\main.o: ..\SRC\DEVICES\ccd.h
+..\obj\main.o: ..\SRC\DEVICES\cntl.h
+..\obj\main.o: ..\SRC\DRIVERS\delay.h
+..\obj\main.o: ..\SRC\DRIVERS\uart.h

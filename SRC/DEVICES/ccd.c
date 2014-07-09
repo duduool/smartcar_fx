@@ -13,8 +13,10 @@
 #include "delay.h"
 #include "adc.h"
 #include "uart.h"
+#include "stdio.h"
 
-uint8_t IMAGE[COL]={0};       //储存线性CCD的AD采样值
+extern uint8_t THRESHOLD;
+extern uint8_t IMAGE[COL];       //储存线性CCD的AD采样值
 
 //在此修改端口号           
 CCD_ConfigType  CCDParSet={ADC0,ADC_PRECISION_8BIT,SI_GPIO,SI_Pin,CK_GPIO,CK_Pin}; 
@@ -84,22 +86,27 @@ void CCD_GetImage(uint32_t ADCx)
     }
    
     CK_0;
-	DelayUs(20); 
+	DelayUs(500); 
 }
-
-
 
 //串口通信
 void SendImage(void)
 {
 	unsigned char i;
+	char buf[5];
 	    for (i = 0; i < COL; i++) {
-           if(IMAGE[i] == 1) 
-               UART_SendData((UART0_Type *)UART0,' ');
-           else
-              UART_SendData((UART0_Type *)UART0,'*');
+//           if(IMAGE[i] == 1) 
+//              UART_SendData((UART0_Type *)UART0,' ');
+//           else
+//              UART_SendData((UART0_Type *)UART0,'*');
 
-				//UART_SendData((UART0_Type *)UART0,'a' + (IMAGE[i] >> 4));
+					if(IMAGE[i] > THRESHOLD)
+					sprintf(buf, " ");
+				else
+					sprintf(buf, "%02X ", IMAGE[i]);
+				//sprintf(buf, "%02X ", IMAGE[i]);
+				UART_printf(buf);
+			//UART_SendData((UART0_Type *)UART0,'a' + (IMAGE[i] >> 4));
        }
       UART_printf("\n");
 }

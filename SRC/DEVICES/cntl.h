@@ -11,10 +11,10 @@
 #define MIN(x, y)   (((x) > (y)) ? (y) : (x))
 
 /* APIs */
-void Steer_PIDx(uint8_t mid);
+void Steer_PIDx(void);
 void Mid_Filter(void);
-void Binarization(void);
-uint8_t Average(void);
-uint8_t Get_MidLine(void);
+void Get_Mid(void);
+void Get_Midx(void);
+void Simple(void);
 
 #endif /*_CONTROL_H_*/

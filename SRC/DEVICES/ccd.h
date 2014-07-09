@@ -13,7 +13,6 @@
 #define SI_Pin 5
 #define CK_Pin 4
 
-#define ROW         1
 #define COL         128
 
 //===================================
