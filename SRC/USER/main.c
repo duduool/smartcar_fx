@@ -29,6 +29,7 @@ int main(void)
     Motor_Init();
     /* LED PTA14初始化 */
     LEDInit(PTA, 14);
+    /* LED PTA17初始化 */
     LEDInit(PTA, 17);
     /* 初始化CCD */
     CCDInit(&CCDParSet);
@@ -44,14 +45,12 @@ int main(void)
         
     while(1) {
         /* Sampling CCD data */
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < 1; i++) {
             CCD_GetImage((uint32_t)ADC0_SE8A_PB0);
         }
-        Mid_Filter();
+        //Mid_Filter();
         Get_Mid();
         Steer_PIDx();
-        DelayMs(500);
-        //Simple();
         //SendImage();
     }
 }

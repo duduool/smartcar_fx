@@ -96,83 +96,36 @@ static uint8_t get_rightboder(int start)
     return right;
 }
 
-void Get_Midx(void) 
-{
-    uint8_t left = get_leftboder(30);
-    uint8_t right= get_rightboder(30);
-    
-    if (left != 0 && right != 127) {
-        MID = (left + right) >> 1;
-        Steer_Out(DIR_MID);
-    } else if (left == 0 && right != 127) {
-        if (right < 95) {
-            Steer_Out(2000);
-            DelayMs(50);
-        } else if (right >= 95 && right < 105) {
-            Steer_Out(2201);
-            DelayMs(10);
-        }    
-    } else if (left != 0 && right == 127) {
-        if (left < 15) {
-            Steer_Out(2399);
-            DelayMs(10);
-        } else {
-            Steer_Out(2800);
-            DelayMs(50);
-        }
-    } else {
-        //Motor_Forward(0);
-    }
-}  
-
+/* 提取赛道中线 */
 void Get_Mid(void)
 {
     uint8_t left = get_leftboder(30);
     uint8_t right= get_rightboder(30);
-
-    if (left != 0 && right != 127) {
+    
+    if (left != 0 && right != 127) {            // 直道
         MID = (left + right) >> 1;
-    } else if (left == 0 && right != 127) {
-        if (right < 70) {
-            OFFSET = 40;
-        } else if (right >= 70 && right < 95) {
+    } else if (left == 0 && right != 127) {     // 左拐
+        if (right < 70) {                       // 大弯
+            OFFSET = 45;
+        } else if (right >= 70 && right < 95) { // 急弯
             OFFSET = 50;
         }
         MID = right - OFFSET;
-        TwinkleLed(PTA, 17);
-    } else if (left != 0 && right == 127) {
-        if (left < 12) {
+        //TwinkleLed(PTA, 17);
+    } else if (left != 0 && right == 127) {     // 右拐
+        if (left < 12) {                        // 大弯
+            OFFSET = 30;
+        } else if (left >= 12 && left < 60) {   // 急弯
+            OFFSET = 40;
+        } else {
             OFFSET = 50;
-        } else if (left >= 12) {
-            OFFSET = 45;
         }
         MID = left + OFFSET;
-        TwinkleLed(PTA, 14);
-    } else {
-       Steer_Out(duty[64 + servo]);
+        //TwinkleLed(PTA, 14);
+    } else {                                    // 十字
+       Steer_Out(duty[64]);
     }
 }
-
-void Simple(void)
-{
-    if (MID < 30) {
-        Steer_Out(duty[20]);
-        DelayMs(100);
-    } else if (MID >= 30 && MID < 45) {
-        Steer_Out(duty[50]);
-        DelayMs(500);
-    } else if (MID >= 45 && MID < 56) {
-        Steer_Out(duty[MID]);
-        DelayMs(500);
-    } else if (MID >= 56 && MID < 64) {
-        Steer_Out(DIR_MID);
-        DelayMs(200);
-    } else {
-        Steer_Out(duty[80]);
-        DelayMs(200);
-    }
-}
-
 
 /* 控制舵机 */
 void Steer_PIDx(void) 

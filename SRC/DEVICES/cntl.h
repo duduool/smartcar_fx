@@ -14,7 +14,5 @@
 void Steer_PIDx(void);
 void Mid_Filter(void);
 void Get_Mid(void);
-void Get_Midx(void);
-void Simple(void);
 
 #endif /*_CONTROL_H_*/
