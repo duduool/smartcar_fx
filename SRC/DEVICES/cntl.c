@@ -10,13 +10,15 @@ const uint8_t YUZI = 45;
                             // 阈值
 /* global variable */
 uint8_t IMAGE[COL];         // 图像的一帧
-uint8_t MID;
 uint8_t OFFSET = 57;        // 偏移
 
 /* global status */
 int m[] = {CENTER, CENTER, CENTER, CENTER}; 
                             // 依次存放当前中值，上次，上上次，上上上次中值
 int servo;
+int flag;
+int MID;
+int prevMID;
 
 /* pid variable */
 double Kp = 1.5;            // PID p控制
@@ -31,8 +33,8 @@ const uint16_t duty[] = {   // 舵机输出PWM
    2082, 2091, 2100, 2109, 2118, 2127, 2136, 2145, // 32
    2154, 2163, 2172, 2181, 2190, 2199, 2208, 2217, // 40
    2226, 2235, 2244, 2253, 2262, 2271, 2280, 2289, // 48
-   2298, 2307, 2316, 2325, 2334, 2343, 2344, 2344, // 56
-   2344, 2379, 2388, 2397, 2406, 2415, 2424, 2433, 
+   2298, 2307, 2316, 2325, 2344, 2344, 2344, 2344, // 56
+   2344, 2344, 2344, 2397, 2406, 2415, 2424, 2433, // 64
    2442, 2451, 2460, 2469, 2478, 2487, 2496, 2505, 
    2514, 2523, 2532, 2541, 2550, 2559, 2568, 2577, 
    2586, 2595, 2604, 2613, 2622, 2631, 2640, 2649, 
@@ -99,19 +101,25 @@ static uint8_t get_rightboder(int start)
 /* 提取赛道中线 */
 void Get_Mid(void)
 {
-    uint8_t left = get_leftboder(30);
-    uint8_t right= get_rightboder(30);
+    uint8_t left = get_leftboder(MID);
+    uint8_t right= get_rightboder(MID);
+    
+    if (right < 50) {                           // U型
+        left = right;
+        right = 127;
+    }
     
     if (left != 0 && right != 127) {            // 直道
         MID = (left + right) >> 1;
+        flag = 0;
     } else if (left == 0 && right != 127) {     // 左拐
-        if (right < 70) {                       // 大弯
+        if (right >= 50 && right < 70) {        // 大弯
             OFFSET = 45;
         } else if (right >= 70 && right < 95) { // 急弯
             OFFSET = 50;
         }
+        flag = -1;
         MID = right - OFFSET;
-        //TwinkleLed(PTA, 17);
     } else if (left != 0 && right == 127) {     // 右拐
         if (left < 12) {                        // 大弯
             OFFSET = 30;
@@ -120,11 +128,18 @@ void Get_Mid(void)
         } else {
             OFFSET = 50;
         }
+        flag = 1;
         MID = left + OFFSET;
-        //TwinkleLed(PTA, 14);
     } else {                                    // 十字
-       Steer_Out(duty[64]);
+        if (flag == -1) {                       // 入十字前是左弯
+            
+        } else if (flag == 0) {                 // 入十字前是直道
+            MID = prevMID;
+        } else {                                // 入十字前是右弯
+        
+        }
     }
+    prevMID = MID;
 }
 
 /* 控制舵机 */
@@ -150,7 +165,7 @@ void Steer_PIDx(void)
     }
     
     Steer_Out(duty[64 + servo]);
-      
+   
     m[0] = m[1];
     m[1] = m[2];
     m[2] = m[3]; 

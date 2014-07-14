@@ -289,10 +289,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>15</ColumnNumber>
+      <ColumnNumber>23</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>29</TopLine>
-      <CurrentLine>51</CurrentLine>
+      <CurrentLine>41</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\SRC\USER\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -465,10 +465,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>34</ColumnNumber>
+      <ColumnNumber>55</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>97</TopLine>
-      <CurrentLine>105</CurrentLine>
+      <TopLine>119</TopLine>
+      <CurrentLine>124</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\SRC\DEVICES\cntl.c</PathWithFileName>
       <FilenameWithoutPath>cntl.c</FilenameWithoutPath>
@@ -481,10 +481,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>25</ColumnNumber>
+      <ColumnNumber>17</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>90</TopLine>
-      <CurrentLine>106</CurrentLine>
+      <TopLine>87</TopLine>
+      <CurrentLine>100</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\SRC\DEVICES\ccd.c</PathWithFileName>
       <FilenameWithoutPath>ccd.c</FilenameWithoutPath>
