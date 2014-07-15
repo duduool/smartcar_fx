@@ -48,9 +48,9 @@ int main(void)
         for (i = 0; i < 1; i++) {
             CCD_GetImage((uint32_t)ADC0_SE8A_PB0);
         }
-        //Mid_Filter();
+        //SendImage();
+        Mid_Filter();
         Get_Mid();
         Steer_PIDx();
-        //SendImage();
     }
 }

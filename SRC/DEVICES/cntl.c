@@ -21,9 +21,9 @@ int MID;
 int prevMID;
 
 /* pid variable */
-double Kp = 1.5;            // PID p控制
-double Ki = 0;              // PID i控制
-double Kd = 0.2;            // PID d控制
+double Kp = 1.42;            // PID p控制
+double Ki = 0;               // PID i控制
+double Kd = 0.12;            // PID d控制
 
 const uint16_t duty[] = {   // 舵机输出PWM
    1794, 1803, 1812, 1821, 1830, 1839, 1848, 1857, // 0 
@@ -75,7 +75,7 @@ static uint8_t get_leftboder(int start)
 {
     uint8_t i = 0, left = 0;
     for (i = start; i > 7; i--) {
-        if (IMAGE[i] > (IMAGE[i-5]+YUZI) && IMAGE[i-1] > (IMAGE[i-6]+YUZI)) {
+        if (IMAGE[i] > (IMAGE[i-6]+YUZI) && IMAGE[i-1] > (IMAGE[i-7]+YUZI)) {
                left = i - 5;
                break;
         }
@@ -88,8 +88,8 @@ static uint8_t get_leftboder(int start)
 static uint8_t get_rightboder(int start) 
 {
     uint8_t i = 0, right = 127;
-    for (i = start; i < 117; i++) {
-          if (IMAGE[i] > (IMAGE[i+5]+YUZI) && IMAGE[i+1] > (IMAGE[i+6]+YUZI)) {
+    for (i = start; i < 120; i++) {
+          if (IMAGE[i] > (IMAGE[i+6]+YUZI) && IMAGE[i+1] > (IMAGE[i+7]+YUZI)) {
                right = i + 5;
                break;
           }
@@ -104,39 +104,44 @@ void Get_Mid(void)
     uint8_t left = get_leftboder(MID);
     uint8_t right= get_rightboder(MID);
     
-    if (right < 50) {                           // U型
+    if (right < 49) {                           // U型
         left = right;
         right = 127;
     }
     
     if (left != 0 && right != 127) {            // 直道
-        MID = (left + right) >> 1;
         flag = 0;
+        MID = (left + right) >> 1;
+        Kp = Kd = 0;
     } else if (left == 0 && right != 127) {     // 左拐
         if (right >= 50 && right < 70) {        // 大弯
             OFFSET = 45;
         } else if (right >= 70 && right < 95) { // 急弯
             OFFSET = 50;
         }
-        flag = -1;
         MID = right - OFFSET;
+        flag = -1;
+        Kp = 1.43;
+        Kd = 0.12;
     } else if (left != 0 && right == 127) {     // 右拐
-        if (left < 12) {                        // 大弯
+        if (left < 13) {                        // 大弯
             OFFSET = 30;
-        } else if (left >= 12 && left < 60) {   // 急弯
+        } else if (left >= 13 && left < 60) {   // 急弯
             OFFSET = 40;
         } else {
-            OFFSET = 50;
+            OFFSET = 42;
         }
-        flag = 1;
         MID = left + OFFSET;
-    } else {                                    // 十字
-        if (flag == -1) {                       // 入十字前是左弯
-            
-        } else if (flag == 0) {                 // 入十字前是直道
-            MID = prevMID;
-        } else {                                // 入十字前是右弯
-        
+        flag = 1;
+        Kp = 1.35;
+        Kd = 0.11;
+    } else {                                     // 十字
+        if (flag == -1) {                        // 入十字前是左弯
+             Steer_Out(duty[64 + servo]);
+        } else if (flag == 0) {                  // 入十字前是直道
+             Steer_Out(duty[64]);
+        } else if (flag == 1){                   // 入十字前是右弯
+             Steer_Out(duty[64 + servo]);
         }
     }
     prevMID = MID;
@@ -153,7 +158,7 @@ void Steer_PIDx(void)
     e[3] = m[3] - CENTER;
     e[2] = m[2] - CENTER;
     e[1] = m[1] - CENTER;
-    e[0] = m[0] - CENTER;
+    e[0] = m[0] - CENTER;   
     ed = e[3] - e[0];
     
     servo = (e[3])*Kp + (e[3]+e[2]+e[1]+e[0])*Ki + (ed)*Kd;

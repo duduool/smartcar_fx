@@ -74,19 +74,19 @@ void CCD_GetImage(uint32_t ADCx)
 		
     for (i = 0; i < COL; i++) {
     //延时决定了CCD中的电容器积累的电荷量，同时决定了其是否达到饱和状态或足以采集黑线的状态
-			 //但是时间过长采集周期会变长，所以请使用蓝宙线性CCD上位机，根据实际图像效果调整延时. 
+    //但是时间过长采集周期会变长，所以请使用蓝宙线性CCD上位机，根据实际图像效果调整延时. 
        CK_0;
                                     
-       DelayUs(10);                 
+       DelayUs(450);                 
                      
        IMAGE[i] =ADC_GetConversionValue(ADCx); 
         
        CK_1;
-       DelayUs(10); 
+       DelayUs(450); 
     }
    
     CK_0;
-	DelayUs(10); 
+	DelayUs(20); 
 }
 
 //串口通信

@@ -33,10 +33,10 @@
 #define DIV64               6
 #define DIV128              7
 
-#define MAX_SPEED           11
-#define MID_SPEED           10
-#define MIN_SPEED           9
-#define DEF_SPEED           8
+#define MAX_SPEED           10
+#define MID_SPEED           9
+#define MIN_SPEED           8
+#define DEF_SPEED           7
 #define DED_SPEED           0
 
 /* ¶æ»ú×ª½Ç·¶Î§(-32, 32)¶È */
