@@ -77,16 +77,16 @@ void CCD_GetImage(uint32_t ADCx)
     //但是时间过长采集周期会变长，所以请使用蓝宙线性CCD上位机，根据实际图像效果调整延时. 
        CK_0;
                                     
-       DelayUs(450);                 
+       DelayUs(200);                 
                      
        IMAGE[i] =ADC_GetConversionValue(ADCx); 
         
        CK_1;
-       DelayUs(450); 
+       DelayUs(200); 
     }
    
     CK_0;
-	DelayUs(20); 
+	DelayUs(50); 
 }
 
 //串口通信

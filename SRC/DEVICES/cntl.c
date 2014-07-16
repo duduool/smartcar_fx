@@ -4,21 +4,20 @@
 #include "uart.h"
 
 /* const value */
-const uint8_t CENTER = 57;  // 小车中心
+const uint8_t CENTER = 57;   // 小车中心
 const uint8_t THRESHOLD = 0xF5; 
-const uint8_t YUZI = 45;
-                            // 阈值
+const uint8_t YUZI = 45;     // 阈值
+                            
 /* global variable */
-uint8_t IMAGE[COL];         // 图像的一帧
-uint8_t OFFSET = 57;        // 偏移
+uint8_t IMAGE[COL];          // 图像的一帧
+uint8_t OFFSET = 57;         // 偏移
 
 /* global status */
 int m[] = {CENTER, CENTER, CENTER, CENTER}; 
-                            // 依次存放当前中值，上次，上上次，上上上次中值
+                             // 依次存放当前中值，上次，上上次，上上上次中值
 int servo;
 int flag;
 int MID;
-int prevMID;
 
 /* pid variable */
 double Kp = 1.42;            // PID p控制
@@ -114,38 +113,51 @@ void Get_Mid(void)
         MID = (left + right) >> 1;
         Kp = Kd = 0;
     } else if (left == 0 && right != 127) {     // 左拐
-        if (right >= 50 && right < 70) {        // 大弯
+        if (right >= 50 && right < 70) {        // 急弯
             OFFSET = 45;
-        } else if (right >= 70 && right < 95) { // 急弯
+            Kp = 1.43;
+            Kd = 0.12;
+        } else if (right >= 70 && right < 95) { // 大弯
             OFFSET = 50;
+            Kp = 1.53;
+            Kd = 0.12;
         }
         MID = right - OFFSET;
         flag = -1;
-        Kp = 1.43;
-        Kd = 0.12;
     } else if (left != 0 && right == 127) {     // 右拐
         if (left < 13) {                        // 大弯
             OFFSET = 30;
+            Kp = 1.35;
+            Kd = 0.11;
         } else if (left >= 13 && left < 60) {   // 急弯
             OFFSET = 40;
+            Kp = 1.45;
+            Kd = 0.11;
         } else {
             OFFSET = 42;
+            Kp = 1.35;
+            Kd = 0.11;  
         }
         MID = left + OFFSET;
         flag = 1;
-        Kp = 1.35;
-        Kd = 0.11;
     } else {                                     // 十字
         if (flag == -1) {                        // 入十字前是左弯
-             Steer_Out(duty[64 + servo]);
+            if (servo > 0)
+                Steer_Out(duty[64 + servo*-1]);
+            else 
+                Steer_Out(duty[64 + servo*-1]);
         } else if (flag == 0) {                  // 入十字前是直道
-             Steer_Out(duty[64]);
+            Steer_Out(duty[64]);
         } else if (flag == 1){                   // 入十字前是右弯
-             Steer_Out(duty[64 + servo]);
+            if (servo > 0)
+                Steer_Out(duty[64 + servo*-1]);
+            else 
+                Steer_Out(duty[64 + servo*-1]);
+            Steer_Out(duty[64 + servo - 15]);
         }
     }
-    prevMID = MID;
 }
+
 
 /* 控制舵机 */
 void Steer_PIDx(void) 
