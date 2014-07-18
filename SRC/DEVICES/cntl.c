@@ -17,7 +17,7 @@ int m[] = {CENTER, CENTER, CENTER, CENTER};
                              // 依次存放当前中值，上次，上上次，上上上次中值
 int servo;
 int flag;
-int MID;
+int MID = 30;
 
 /* pid variable */
 double Kp = 1.42;            // PID p控制
@@ -32,8 +32,8 @@ const uint16_t duty[] = {   // 舵机输出PWM
    2082, 2091, 2100, 2109, 2118, 2127, 2136, 2145, // 32
    2154, 2163, 2172, 2181, 2190, 2199, 2208, 2217, // 40
    2226, 2235, 2244, 2253, 2262, 2271, 2280, 2289, // 48
-   2298, 2307, 2316, 2325, 2344, 2344, 2344, 2344, // 56
-   2344, 2344, 2344, 2397, 2406, 2415, 2424, 2433, // 64
+   2298, 2307, 2316, 2325, 2334, 2334, 2334, 2334, // 56
+   2334, 2334, 2334, 2334, 2334, 2334, 2334, 2433, // 64
    2442, 2451, 2460, 2469, 2478, 2487, 2496, 2505, 
    2514, 2523, 2532, 2541, 2550, 2559, 2568, 2577, 
    2586, 2595, 2604, 2613, 2622, 2631, 2640, 2649, 
@@ -110,15 +110,15 @@ void Get_Mid(void)
     
     if (left != 0 && right != 127) {            // 直道
         flag = 0;
-        MID = (left + right) >> 1;
+        MID = (left + right + 5) >> 1;
         Kp = Kd = 0;
     } else if (left == 0 && right != 127) {     // 左拐
         if (right >= 50 && right < 70) {        // 急弯
-            OFFSET = 45;
+            OFFSET = 40;
             Kp = 1.43;
             Kd = 0.12;
         } else if (right >= 70 && right < 95) { // 大弯
-            OFFSET = 50;
+            OFFSET = 45;
             Kp = 1.53;
             Kd = 0.12;
         }
@@ -126,35 +126,23 @@ void Get_Mid(void)
         flag = -1;
     } else if (left != 0 && right == 127) {     // 右拐
         if (left < 13) {                        // 大弯
-            OFFSET = 30;
+            OFFSET = 50;
             Kp = 1.35;
             Kd = 0.11;
         } else if (left >= 13 && left < 60) {   // 急弯
-            OFFSET = 40;
+            OFFSET = 55;
             Kp = 1.45;
             Kd = 0.11;
         } else {
-            OFFSET = 42;
+            OFFSET = 60;
             Kp = 1.35;
             Kd = 0.11;  
         }
         MID = left + OFFSET;
         flag = 1;
     } else {                                     // 十字
-        if (flag == -1) {                        // 入十字前是左弯
-            if (servo > 0)
-                Steer_Out(duty[64 + servo*-1]);
-            else 
-                Steer_Out(duty[64 + servo*-1]);
-        } else if (flag == 0) {                  // 入十字前是直道
-            Steer_Out(duty[64]);
-        } else if (flag == 1){                   // 入十字前是右弯
-            if (servo > 0)
-                Steer_Out(duty[64 + servo*-1]);
-            else 
-                Steer_Out(duty[64 + servo*-1]);
-            Steer_Out(duty[64 + servo - 15]);
-        }
+        Steer_Out(duty[64]);
+        //DelayMs(100);
     }
 }
 
@@ -181,9 +169,15 @@ void Steer_PIDx(void)
         servo = -64;
     }
     
-    Steer_Out(duty[64 + servo]);
+    Steer_Out(duty[64 - servo]);
    
     m[0] = m[1];
     m[1] = m[2];
     m[2] = m[3]; 
+}
+
+/* 检测起跑线 */
+uint8_t Start_Run(void)
+{
+    return 1;
 }

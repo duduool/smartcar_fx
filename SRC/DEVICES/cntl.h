@@ -14,5 +14,6 @@
 void Steer_PIDx(void);
 void Mid_Filter(void);
 void Get_Mid(void);
+uint8_t Start_Run(void);
 
 #endif /*_CONTROL_H_*/

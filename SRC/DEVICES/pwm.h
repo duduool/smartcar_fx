@@ -3,7 +3,6 @@
 
 #include "sys.h"
 #include "gpio.h"
-#include "pid.h"
 
 #define TPM_0               0
 #define TPM_1               1
@@ -40,7 +39,7 @@
 #define DED_SPEED           0
 
 /* ¶æ»ú×ª½Ç·¶Î§(-32, 32)¶È */
-#define DIR_MID		        2344            // 0
+#define DIR_MID		        2344           // 0
 #define DIR_LEFT	        (DIR_MID - 550) // -32 1794
 #define DIR_RIGHT	        (DIR_MID + 505) // 32  2849
 

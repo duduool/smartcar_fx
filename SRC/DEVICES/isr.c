@@ -4,7 +4,6 @@
 #include "pit.h"
 #include "led.h"
 #include "pwm.h"
-#include "pid.h"
 #include "cntl.h"
 #include "delay.h"
 
